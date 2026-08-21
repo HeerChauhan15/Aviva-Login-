@@ -5,7 +5,7 @@ import os
 import re
 
 st.set_page_config(page_title="Insurance Premium Calculator", page_icon="💰", layout="wide")
-st.title("💰 Aviva GCL Insurance Premium Calculator")
+st.title("💰 Login Aviva GCL Insurance Premium Calculator")
 st.markdown("Select plan details below")
 
 GST_RATE = 18.0  # fixed, applied on top of base rate — no loader
