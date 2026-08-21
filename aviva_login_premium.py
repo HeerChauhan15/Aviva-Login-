@@ -149,12 +149,17 @@ if st.button("Get Rate", type="primary"):
         df_rates, tenure_map, used_file = load_rate_table(cover_type, life_type, loan_type)
         base_rate = get_rate(df_rates, tenure_map, age, tenure)
         final_rate = apply_gst(base_rate)
-        premium = final_rate * (sum_assured_manual / 100000)
+        premium_without_gst = base_rate * (sum_assured_manual / 100000)
+        premium_with_gst = final_rate * (sum_assured_manual / 100000)
         st.success(
             f"✅ {life_type} | {loan_type} | {cover_type} Cover | Age {age} | Tenure {tenure} yrs | "
             f"Sum Assured ₹{sum_assured_manual:,} | GST {GST_RATE}% | File: {os.path.basename(used_file)}"
         )
-        st.metric("Premium", f"₹ {premium:,.2f}")
+        m1, m2 = st.columns(2)
+        with m1:
+            st.metric("Premium (without GST)", f"₹ {premium_without_gst:,.2f}")
+        with m2:
+            st.metric("Premium (with GST)", f"₹ {premium_with_gst:,.2f}")
     except Exception as e:
         st.error(f"Error: {e}")
 
