@@ -15,9 +15,33 @@ def normalize(s):
     return re.sub(r'[\s\-_]+', '', s.upper())
 
 
+# Explicit filename map — exact files provided.
+# Key: (loan_type, life_type, cover_type) -> filename on disk
+RATE_FILE_MAP = {
+    ("Home Loan", "Single Life", "Reducing"): "01- hl--single-reducing.xlsx",
+    ("Home Loan", "Single Life", "Level"):    "HL- SINGLE.xlsx",
+    ("Home Loan", "Joint Life", "Reducing"):  "HL-JOINT-REDUCING.xlsx",
+    ("Home Loan", "Joint Life", "Level"):     "HL-JOINT.xlsx",
+    ("LAP", "Single Life", "Level"):          "LAP - SINGLE.xlsx",
+    ("LAP", "Joint Life", "Reducing"):        "LAP-JOINT-REDUCING.xlsx",
+    ("LAP", "Joint Life", "Level"):           "LAP-JOINT.xlsx",
+    ("LAP", "Single Life", "Reducing"):       "LAP-SINGLE- REDUCING.xlsx",
+}
+
+
 def find_rate_file(cover_type, life_type, loan_type, folder="."):
-    """Fuzzy-matches the rate file by keywords in its name instead of a hardcoded
-    filename map — avoids 'file not found' errors from small naming differences."""
+    """Looks up the rate file from an explicit filename map first (exact match to
+    the known files). Falls back to fuzzy keyword matching if the mapped file is
+    missing on disk or the combination isn't in the map — avoids hard failures
+    from small naming differences."""
+
+    mapped_name = RATE_FILE_MAP.get((loan_type, life_type, cover_type))
+    if mapped_name:
+        mapped_path = os.path.join(folder, mapped_name)
+        if os.path.exists(mapped_path):
+            return mapped_path
+
+    # --- Fallback: fuzzy match by keywords in the filename ---
     loan_token = "HL" if loan_type == "Home Loan" else "LAP"
     life_token = "SINGLE" if life_type == "Single Life" else "JOINT"
     want_reducing = (cover_type == "Reducing")
@@ -34,7 +58,8 @@ def find_rate_file(cover_type, life_type, loan_type, folder="."):
     if not candidates:
         raise FileNotFoundError(
             f"No rate file found for {cover_type} / {life_type} / {loan_type}. "
-            f"Looking for a filename containing '{loan_token}', '{life_token}'"
+            f"Expected mapped file '{mapped_name}' or a filename containing "
+            f"'{loan_token}', '{life_token}'"
             + (", 'REDUCING'" if want_reducing else " (and NOT 'REDUCING')") + "."
         )
     return os.path.join(folder, candidates[0])
